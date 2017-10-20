@@ -1,24 +1,29 @@
+
+'''
+import json
+with open ('F:\\12_Capstone\\tweets.json') as json_data:
+    data = json.load (json_data)
+    print (data['created_at'])
+'''
 import os
 import pandas as pd
 import json
 import csv
 
-tar = os.chdir('D:/DataSscience/20_Capstone/StockPredictions/Data') # do not mention file name here
-print os.getcwd()# to print the path name in CLI
-#print "JSON2CSV"
-with open('D:/DataSscience/20_Capstone/StockPredictions/Data/test.txt', "r") as fr:
+with open('F:\\12_Capstone\\tweets.json', "r") as fr:
     jsondata=json.loads(str(fr.read()))
-
+#print (data['created_at'])
     
 count = 0
 
-fw = open('jsontocsv1.csv', mode='wb+')
+fw = open('F:\\12_Capstone\\jsontocsv.csv', mode='w+', encoding = "utf-8")
 collist = jsondata.keys()
 colvalues = jsondata.values()
-csvwriter = csv.writer(fw)
-csvwriter.writerow(collist)
-
-#csvwriter.writerow(colvalues)
+csvfile = csv.writer(fw)
+print (collist)
+#print (colvalues)
+csvfile.writerow(collist)
+csvfile.writerow(colvalues)
 
 fw.close()
-     
+    
