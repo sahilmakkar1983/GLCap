@@ -1,0 +1,10 @@
+Utkarsh to Try
+
+
+How to get Old tweets
+1. https://stackoverflow.com/questions/28267640/tweepy-get-old-tweets-now-possible-with-twitter-search-api
+
+2. https://gist.github.com/alexdeloy/fdb36ad251f70855d5d6
+
+3. https://stackoverflow.com/questions/37860411/extracting-tweet-from-twitter-api-using-python
+
