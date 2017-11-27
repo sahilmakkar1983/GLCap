@@ -70,57 +70,118 @@ def sliding_window(df,window_size,window_stride,input_features=None, output_feat
     return (np.array(myArray), outputDataArray)
 
 
-
-dateparse = lambda x: pd.datetime.strptime(x, '%d-%m-%Y')
-df = pd.read_csv("/datadrive/Sahil/code/GL/fewTrails/Datasets/GE.csv", parse_dates=['date'],date_parser=dateparse)
+# In[76]:
 
 
-df["date"]  = pd.to_datetime(df.date)
-type(df["date"].iloc[0])
-df = df.sort_values(by="date")
+def fileProcessor(csvFile,stockName):
+    dateparse = lambda x: pd.datetime.strptime(x, '%d-%m-%Y')
+    df = pd.read_csv(csvFile, parse_dates=['date'],date_parser=dateparse)
+    #df = pd.read_csv("/datadrive/Sahil/code/GL/fewTrails/Datasets/GE.csv", parse_dates=['date'],date_parser=dateparse)
 
-gCount=0
-df['close_delta'] = 0
-df['close_direction'] = 0
-for index in range(0,df.shape[0]):
-    #print(index,df.iloc[index]['close'])
-    if index == 0:
-        #gCount+=1
-        df['close_delta'].iloc[index] =  (float(0))
-        df['close_direction'].iloc[index] =  False
-    #elif index <= df.shape[0]-1:
-    else:
-        df['close_delta'].iloc[index] = ((df['close'].iloc[index] - df['close'].iloc[index-1])/df['close'].iloc[index-1])*100
-        df['close_direction'].iloc[index] = (df['close'].iloc[index] - df['close'].iloc[index-1]) > 0
-        
+
+    df["date"]  = pd.to_datetime(df.date)
+    type(df["date"].iloc[0])
+    df = df.sort_values(by="date")
+
+    df['close_delta'] = 0
+    df['close_direction'] = 0
+    df['Stock_name'] = stockName
+    for index in range(0,df.shape[0]):
+        #print(index,df.iloc[index]['close'])
+        if index == 0:
+            df['close_delta'].iloc[index] =  (float(0))
+            df['close_direction'].iloc[index] =  1
+        #elif index <= df.shape[0]-1:
+        else:
+            df['close_delta'].iloc[index] = ((df['close'].iloc[index] - df['close'].iloc[index-1])/df['close'].iloc[index-1])*100
+            if df['close_delta'].iloc[index] >= 1:
+                df['close_direction'].iloc[index] = 2
+            elif df['close_delta'].iloc[index] <= -1:
+                df['close_direction'].iloc[index] = 0
+            else:
+                df['close_direction'].iloc[index] = 1
+    return (df)
+
+fileCount = 0
+reParseFile = True
+if reParseFile == True:
+	for root, dirs, files in os.walk("/datadrive/Sahil/code/GL/fewTrails/Datasets"):
+		for file in files:
+			if file.endswith(".csv"):
+				print(os.path.join(root, file))
+				if fileCount == 0:
+					df = fileProcessor(os.path.join(root, file),file.split('.')[0])
+				else:
+					df = df.append(fileProcessor(os.path.join(root, file),file.split('.')[0]))
+				fileCount = fileCount + 1
+	df.to_csv("/datadrive/Sahil/code/GL/fewTrails/Datasets/ALL_clean.csv")
+else:
+	df = df.read_csv("/datadrive/Sahil/code/GL/fewTrails/Datasets/ALL_clean.csv")
+ 
 
     
 df.shape[0]
 
 
+dfdffd
+
 
 df.head(15)
 
+
+# In[50]:
+
+import pandas as pd
+import numpy as np
+# Get some time series data
+#df = pd.read_csv("https://raw.githubusercontent.com/plotly/datasets/master/timeseries.csv")
+#df['output']=[1,0,1,0,1,0,1,0,1,0,1]
+
+
+# In[58]:
 
 input_cols = ['curr_ratio','tot_debt_tot_equity', 'oper_profit_margin','asset_turn','ret_equity','sentiment']
 mydf = df
 x_train,y_train=sliding_window(mydf,5,1,input_cols,['close_direction'])
 
 
+# In[59]:
 
 x_train
+
+
+# In[60]:
+
 y_train
 
 
-#y_train = np.array(y_train)
-#y_train = np.array(y_train).reshape((-1, 1))
+# In[61]:
+
+y_train = np.array(y_train)
+y_train = np.array(y_train).reshape((-1, 1))
 #y_train = to_categorical(y_train)
 
+from sklearn.preprocessing import OneHotEncoder
+onehot_encoder = OneHotEncoder(sparse=False)
+#integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
+y_train = onehot_encoder.fit_transform(y_train)
 
+
+# In[62]:
+
+#onehot_encoded[0:30]
+
+
+# In[63]:
+
+y_train
+
+
+# In[64]:
 
 model = Sequential()
 # input_shape = number of time-steps, number-of-features
-model.add(LSTM(128,input_shape=(5,len(input_shape)),
+model.add(LSTM(128,input_shape=(5,len(input_cols)),
                activation='sigmoid', 
                inner_activation='hard_sigmoid', 
                return_sequences=True))
@@ -130,28 +191,146 @@ model.add(Dropout(0.2))
 #model.add(TimeDistributedDense(11))
 #model.add(Dense(128))
 model.add(Dense(64, kernel_initializer='uniform', activation='relu'))
-model.add(Dense(output_dim=2, kernel_initializer='uniform', activation='sigmoid'))
+model.add(Dense(output_dim=3, kernel_initializer='uniform', activation='sigmoid'))
 #model.add(Activation('sigmoid'))
 model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
 
+# In[65]:
 
 model.summary()
 
+
+# In[66]:
 
 print('Train...')
 model.fit(x_train, y_train,
           batch_size=1,
           epochs=5,
           validation_data=(x_train, y_train))
+#score, acc = 
+
+
+# In[68]:
 
 score = model.evaluate(x_train, y_train,batch_size=1)
 print()
 print('Test score:', score)
-print('Test accuracy:', accuracy_score)
+print('Test accuracy:', confusion_matrix(y_train,model.predict(x_train)))
+
+
+# In[71]:
+
+#model.predict(x_train)
+a = model.predict_classes(x_train)
+
+
+# In[72]:
+
+b = set(a)
+
+
+# In[73]:
+
+b
+
+
+# In[ ]:
 
 
 
-model.predict(x_train)
 
-	
+# In[ ]:
+
+
+
+
+# In[ ]:
+
+
+
+
+# In[ ]:
+
+
+
+
+# In[ ]:
+
+
+
+
+# In[ ]:
+
+
+
+
+# In[ ]:
+
+
+
+
+# In[ ]:
+
+
+
+
+# In[ ]:
+
+
+
+
+# In[ ]:
+
+
+
+
+# In[ ]:
+
+
+
+
+# In[ ]:
+
+
+
+
+# In[ ]:
+
+ALL
+
+
+# In[ ]:
+
+a=[[[]]]
+
+
+# In[ ]:
+
+a[0] = ALL[0:5]
+
+
+# In[ ]:
+
+a.append(ALL[1:6])
+
+
+# In[ ]:
+
+a
+
+
+# In[ ]:
+
+np.array(a)
+
+
+# In[ ]:
+
+len(ALL)
+
+
+# In[ ]:
+
+
+
