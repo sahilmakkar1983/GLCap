@@ -1,0 +1,24 @@
+import os
+import pandas as pd
+import json
+import csv
+
+tar = os.chdir('D:/DataSscience/20_Capstone/StockPredictions/Data') # do not mention file name here
+print os.getcwd()# to print the path name in CLI
+#print "JSON2CSV"
+with open('D:/DataSscience/20_Capstone/StockPredictions/Data/test.txt', "r") as fr:
+    jsondata=json.loads(str(fr.read()))
+
+    
+count = 0
+
+fw = open('jsontocsv1.csv', mode='wb+')
+collist = jsondata.keys()
+colvalues = jsondata.values()
+csvwriter = csv.writer(fw)
+csvwriter.writerow(collist)
+
+#csvwriter.writerow(colvalues)
+
+fw.close()
+     
